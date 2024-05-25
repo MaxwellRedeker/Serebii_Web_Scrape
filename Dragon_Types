@@ -1,0 +1,177 @@
+##Full Script.
+#details Broken up Below
+
+#import Libraries
+from urllib.request import urlopen, Request
+from bs4 import BeautifulSoup
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+#set object 'url' to the website you want to scrape
+#in this case it sit the Serebi.net Dragon dex from SV
+url = 'https://www.serebii.net/pokedex-sv/water.shtml'
+
+#set url as string object
+html_contents = requests.get(url).text
+
+#parse through the website's html content
+#and "prettify" it
+soup = BeautifulSoup(html_contents, 'lxml')
+print(soup.prettify())
+
+#pull data from HTML table 
+dextable = soup.find("table", attrs = {"class": "dextable"})
+print(dextable)
+
+dextable_rows = dextable.find_all("td")
+print(dextable_rows)
+
+for td in dextable_rows:
+    print(td.prettify())
+    
+#Get rid of the \n or blank td tags.
+#they will ruin the final table results otherwise
+for td in soup.find_all():
+    if len(td.get_text(strip=True))==0:
+        td.extract()
+
+#check out your pretty soup 
+#and your table data, prior to formatting it into a table
+print(soup)
+headings = []
+for td in soup.find_all("td"):
+    headings.append(td.text.replace('\n', ' ').strip())
+print(headings)
+
+
+#Preprocessing Data to input into table...
+#get rid of the first 9 tags b/c they are junk
+#this needs work, since I manually counted out the first 9 trash headers
+data = headings[9:]
+#as well, I manuall looked up the empty columns that still kept their head
+#from the initial scrape.
+data.remove('Pic')
+data.remove('Base Stats')
+data.remove('Type')
+
+print(data)
+
+
+#5.
+h = len(data)
+l = h/9
+l = int(l)
+l
+
+l = int(l)
+df = pd.DataFrame(np.array(data).reshape(l,9))
+
+#set headers
+df.columns = df.iloc[0]
+df = df[1:]
+
+#add a column of Type back in
+#IMPROVEMENT OPP.
+#worktoautomate pulling the "dragon type" from the HTML and inputting into thiscolumn...
+df['Type']="Dragon"
+
+df.head()
+df
+
+
+#Reset the df so that you can establish dtypes for the columns
+#for some reason the OGcode won't allow the columns tochangefrom dtype object
+#which was the default dtype after I scraped with BS
+
+#df_test = pd.read_html(str(dextable))[0]
+#df_test
+df['Name'] = df['Name'].astype(str)
+df['Abilities'] = df['Abilities'].astype(str)
+df['HP'] = df['HP'].astype(int)
+df['Att'] = df['Att'].astype(int)
+df['Def'] = df['Def'].astype(int)
+df['S.Att'] = df['S.Att'].astype(int)
+df['S.Def'] = df['S.Def'].astype(int)
+df['Spd'] = df['Spd'].astype(int)
+df['Type'] = df['Type'].astype(str)
+
+df.info()
+df
+
+print(df.describe())
+print(df.info())
+
+
+#Create tables of the stats
+#that can later be referenced in equations and whatnot
+
+Type_HP_Mean = df.HP.mean()
+print('Type_HP_Mean', Type_HP_Mean)
+
+Type_Att_Mean = df.Att.mean()
+print('Type_Att_Mean', Type_Att_Mean)
+
+Type_Def_Mean = df.Def.mean()
+print('Type_Def_Mean', Type_Def_Mean)
+
+Type_SpAtt_Mean = df['S.Att'].mean()
+print('Type_SpAtt_Mean', Type_SpAtt_Mean)
+
+Type_SpDef_Mean = df['S.Def'].mean()
+print('Type_SpDef_Mean', Type_SpDef_Mean)
+
+Type_Spd_Mean = df.Spd.mean()
+print('Type_Spd_Mean', Type_Spd_Mean)
+
+
+#create module that allows for user to input a stat name, i.e. 'HP'
+#and return the stats from the full list by pkmn name --
+##FIND WAY TO CONVERT BELOW CODE TO A FOR LOOP
+#I have seen this pattern in the past...
+#must be faster way to iterate through the df headers and run this
+for ind in df.index:
+    print(df['Name'][ind], df['HP'][ind])
+for ind in df.index:
+    print(df['Name'][ind], df['Att'][ind])
+for ind in df.index:
+    print(df['Name'][ind], df['Def'][ind])
+for ind in df.index:
+    print(df['Name'][ind], df['S.Att'][ind])
+for ind in df.index:
+    print(df['Name'][ind], df['S.Def'][ind])
+for ind in df.index:
+    print(df['Name'][ind], df['Spd'][ind])
+    
+    
+    #Reset the df so that you can establish dtypes for the columns
+#for some reason the OGcode won't allow the columns tochangefrom dtype object
+#which was the default dtype after I scraped with BS
+
+#df_test = pd.read_html(str(dextable))[0]
+#df_test
+df['Name'] = df['Name'].astype(str)
+df['Abilities'] = df['Abilities'].astype(str)
+df['HP'] = df['HP'].astype(int)
+df['Att'] = df['Att'].astype(int)
+df['Def'] = df['Def'].astype(int)
+df['S.Att'] = df['S.Att'].astype(int)
+df['S.Def'] = df['S.Def'].astype(int)
+df['Spd'] = df['Spd'].astype(int)
+df['Type'] = df['Type'].astype(str)
+
+#df_test = pd.read_html(str(dextable))[0]
+#df_test
+df['Name'] = df['Name'].astype(str)
+df['Abilities'] = df['Abilities'].astype(str)
+df['HP'] = df['HP'].astype(int)
+df['Att'] = df['Att'].astype(int)
+df['Def'] = df['Def'].astype(int)
+df['S.Att'] = df['S.Att'].astype(int)
+df['S.Def'] = df['S.Def'].astype(int)
+df['Spd'] = df['Spd'].astype(int)
+df['Type'] = df['Type'].astype(str)
+
+df.info()
+df
